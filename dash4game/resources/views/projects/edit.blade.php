@@ -43,16 +43,18 @@
                 <div class="flex items-center gap-3 pt-2">
                     <x-primary-button>Save Changes</x-primary-button>
                     <a href="{{ route('projects.show', $project) }}" class="text-sm text-gray-500 hover:text-gray-300 transition-colors">Cancel</a>
-
-                    @can('delete', $project)
-                        <form method="POST" action="{{ route('projects.destroy', $project) }}" class="ml-auto"
-                              onsubmit="return confirm('Delete this project? This cannot be undone.')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="text-sm text-red-500 hover:text-red-400 transition-colors">Delete Project</button>
-                        </form>
-                    @endcan
                 </div>
             </form>
+
+            @can('delete', $project)
+                <div class="border-t border-gray-800 mt-6 pt-6">
+                    <form method="POST" action="{{ route('projects.destroy', $project) }}"
+                          onsubmit="return confirm('Delete this project and all its data? This cannot be undone.')">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="text-sm text-red-500 hover:text-red-400 transition-colors">🗑️ Delete Project</button>
+                    </form>
+                </div>
+            @endcan
         </div>
     </div>
 </x-app-layout>

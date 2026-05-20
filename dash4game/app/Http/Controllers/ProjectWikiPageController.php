@@ -59,9 +59,9 @@ class ProjectWikiPageController extends Controller
     public function show(Project $project, WikiPage $wikiPage)
     {
         $this->authorize('view', $project);
-        abort_if($wikiPage->project_id !== $project->id, 404);
+        abort_if($wikiPage->project_id != $project->id, 404);
 
-        $wikiPage->load('creator', 'updater');
+        $wikiPage->load('creator', 'updater', 'attachments');
 
         return view('wiki.show', compact('project', 'wikiPage'));
     }
@@ -69,8 +69,9 @@ class ProjectWikiPageController extends Controller
     public function edit(Project $project, WikiPage $wikiPage)
     {
         $this->authorize('manageWiki', $project);
-        abort_if($wikiPage->project_id !== $project->id, 404);
+        abort_if($wikiPage->project_id != $project->id, 404);
 
+        $wikiPage->load('attachments');
         $categories = WikiPageCategory::cases();
         return view('wiki.edit', compact('project', 'wikiPage', 'categories'));
     }
@@ -78,7 +79,7 @@ class ProjectWikiPageController extends Controller
     public function update(UpdateWikiPageRequest $request, Project $project, WikiPage $wikiPage)
     {
         $this->authorize('manageWiki', $project);
-        abort_if($wikiPage->project_id !== $project->id, 404);
+        abort_if($wikiPage->project_id != $project->id, 404);
 
         $wikiPage->update([
             ...$request->validated(),
@@ -92,7 +93,7 @@ class ProjectWikiPageController extends Controller
     public function destroy(Project $project, WikiPage $wikiPage)
     {
         $this->authorize('manageWiki', $project);
-        abort_if($wikiPage->project_id !== $project->id, 404);
+        abort_if($wikiPage->project_id != $project->id, 404);
 
         $wikiPage->delete();
 

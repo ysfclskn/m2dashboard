@@ -46,8 +46,17 @@
                             @endif
                         </div>
                         @can('update', $project)
-                            <a href="{{ route('projects.sprints.edit', [$project, $sprint]) }}"
-                               class="text-sm text-gray-500 hover:text-gray-300 transition-colors ml-4">Edit</a>
+                            <div class="flex items-center gap-2 ml-4">
+                                @if (in_array($sprint->status->value, ['planned', 'active']))
+                                    <form method="POST" action="{{ route('projects.sprints.complete', [$project, $sprint]) }}"
+                                          onsubmit="return confirm('Complete this raid?')">
+                                        @csrf @method('PATCH')
+                                        <button type="submit" class="text-xs px-2.5 py-1 bg-green-600 text-white rounded-lg hover:bg-green-500 transition-colors">✓ Complete</button>
+                                    </form>
+                                @endif
+                                <a href="{{ route('projects.sprints.edit', [$project, $sprint]) }}"
+                                   class="text-sm text-gray-500 hover:text-gray-300 transition-colors">Edit</a>
+                            </div>
                         @endcan
                     </div>
 

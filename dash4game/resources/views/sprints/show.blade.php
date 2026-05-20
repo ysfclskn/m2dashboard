@@ -9,8 +9,17 @@
                 <span class="text-xs px-2 py-0.5 rounded-full {{ $badge[$sprint->status->value] ?? '' }}">{{ $sprint->status->label() }}</span>
             </div>
             @can('update', $project)
-                <a href="{{ route('projects.sprints.edit', [$project, $sprint]) }}"
-                   class="text-sm px-3 py-1.5 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors">Edit Raid</a>
+                <div class="flex items-center gap-2">
+                    @if (in_array($sprint->status->value, ['planned', 'active']))
+                        <form method="POST" action="{{ route('projects.sprints.complete', [$project, $sprint]) }}"
+                              onsubmit="return confirm('Complete this raid?')">
+                            @csrf @method('PATCH')
+                            <button type="submit" class="text-sm px-3 py-1.5 border border-green-700/50 text-green-400 rounded-lg hover:bg-green-500/10 hover:border-green-500 transition-colors">✓ Complete Raid</button>
+                        </form>
+                    @endif
+                    <a href="{{ route('projects.sprints.edit', [$project, $sprint]) }}"
+                       class="text-sm px-3 py-1.5 border border-amber-700/50 text-amber-500 rounded-lg hover:bg-amber-500/10 hover:border-amber-500 transition-colors">Edit Raid</a>
+                </div>
             @endcan
         </div>
     </x-slot>

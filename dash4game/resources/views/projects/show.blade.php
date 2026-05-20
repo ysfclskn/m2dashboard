@@ -11,7 +11,7 @@
                 <span class="text-xs px-2 py-0.5 rounded-full {{ $badge }}">{{ $project->status->label() }}</span>
             </div>
             @can('update', $project)
-                <a href="{{ route('projects.edit', $project) }}" class="text-sm text-gray-500 hover:text-gray-300 transition-colors">Edit</a>
+                <a href="{{ route('projects.edit', $project) }}" class="text-sm px-3 py-1.5 border border-amber-700/50 text-amber-500 rounded-lg hover:bg-amber-500/10 hover:border-amber-500 transition-colors">Edit</a>
             @endcan
         </div>
     </x-slot>
@@ -46,31 +46,43 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-            {{-- Active Raid --}}
+            {{-- Active Raids --}}
             <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                <h3 class="font-semibold text-gray-100 mb-3">⚡ Active Raid</h3>
-                @if ($activeSprint)
-                    <a href="{{ route('projects.sprints.show', [$project, $activeSprint]) }}"
-                       class="block p-3 bg-green-900/20 border border-green-800/50 rounded-lg hover:border-green-700 transition-colors">
-                        <div class="font-medium text-green-400 text-sm">{{ $activeSprint->name }}</div>
-                        @if ($activeSprint->goal)
-                            <div class="text-xs text-gray-400 mt-1">{{ $activeSprint->goal }}</div>
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-semibold text-gray-100">⚡ Active Raids</h3>
+                    <a href="{{ route('projects.sprints.index', $project) }}" class="text-xs text-amber-400 hover:text-amber-300">View all →</a>
+                </div>
+                @forelse ($activeSprints as $sprint)
+                    @php
+                        $isActive = $sprint->status->value === 'active';
+                        $pct = $sprint->completionPercentage();
+                        $borderColor = $isActive ? 'border-green-800/50 bg-green-900/20' : 'border-gray-700 bg-gray-800/40';
+                        $nameColor   = $isActive ? 'text-green-400' : 'text-gray-300';
+                    @endphp
+                    <a href="{{ route('projects.sprints.show', [$project, $sprint]) }}"
+                       class="block p-3 border {{ $borderColor }} rounded-lg hover:border-amber-700/50 transition-colors mb-2 last:mb-0">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-xs px-1.5 py-0.5 rounded {{ $isActive ? 'bg-green-900/50 text-green-400' : 'bg-gray-700 text-gray-400' }}">
+                                {{ $sprint->status->label() }}
+                            </span>
+                            <span class="font-medium {{ $nameColor }} text-sm truncate">{{ $sprint->name }}</span>
+                        </div>
+                        @if ($sprint->goal)
+                            <div class="text-xs text-gray-500 mb-2 truncate">{{ $sprint->goal }}</div>
                         @endif
-                        <div class="mt-2">
-                            @php $pct = $activeSprint->completionPercentage() @endphp
-                            <div class="flex justify-between text-xs text-gray-500 mb-1">
-                                <span>Progress</span><span>{{ $pct }}%</span>
-                            </div>
-                            <div class="w-full bg-gray-800 rounded-full h-1.5">
-                                <div class="bg-green-500 h-1.5 rounded-full" style="width: {{ $pct }}%"></div>
-                            </div>
+                        <div class="flex justify-between text-xs text-gray-500 mb-1">
+                            <span>Progress</span><span>{{ $pct }}%</span>
+                        </div>
+                        <div class="w-full bg-gray-800 rounded-full h-1">
+                            <div class="{{ $isActive ? 'bg-green-500' : 'bg-gray-600' }} h-1 rounded-full transition-all"
+                                 style="width: {{ $pct }}%"></div>
                         </div>
                     </a>
-                @else
-                    <p class="text-sm text-gray-500">No active raid.
+                @empty
+                    <p class="text-sm text-gray-500">No active raids.
                         <a href="{{ route('projects.sprints.create', $project) }}" class="text-amber-400 hover:text-amber-300">Start one →</a>
                     </p>
-                @endif
+                @endforelse
             </div>
 
             {{-- Recent Quests --}}

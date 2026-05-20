@@ -41,7 +41,7 @@ class ProjectProgressReportController extends Controller
     public function show(Project $project, ProgressReport $progressReport)
     {
         $this->authorize('view', $project);
-        abort_if($progressReport->project_id !== $project->id, 404);
+        abort_if($progressReport->project_id != $project->id, 404);
 
         $progressReport->load('creator');
 
@@ -51,7 +51,7 @@ class ProjectProgressReportController extends Controller
     public function edit(Project $project, ProgressReport $progressReport)
     {
         $this->authorize('update', $project);
-        abort_if($progressReport->project_id !== $project->id, 404);
+        abort_if($progressReport->project_id != $project->id, 404);
 
         return view('reports.edit', compact('project', 'progressReport'));
     }
@@ -59,7 +59,7 @@ class ProjectProgressReportController extends Controller
     public function update(UpdateProgressReportRequest $request, Project $project, ProgressReport $progressReport)
     {
         $this->authorize('update', $project);
-        abort_if($progressReport->project_id !== $project->id, 404);
+        abort_if($progressReport->project_id != $project->id, 404);
 
         $progressReport->update($request->validated());
 
@@ -70,7 +70,7 @@ class ProjectProgressReportController extends Controller
     public function destroy(Project $project, ProgressReport $progressReport)
     {
         $this->authorize('update', $project);
-        abort_if($progressReport->project_id !== $project->id, 404);
+        abort_if($progressReport->project_id != $project->id, 404);
 
         $progressReport->delete();
 

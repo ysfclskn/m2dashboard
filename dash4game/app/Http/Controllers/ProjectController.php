@@ -62,7 +62,9 @@ class ProjectController extends Controller
 
         $project->load(['owner', 'members.user']);
 
-        $activeSprint    = $project->activeSprint();
+        $activeSprints   = $project->sprints()
+            ->where('status', 'active')
+            ->get();
         $taskStats       = $project->tasks()
             ->selectRaw('status, count(*) as count')
             ->groupBy('status')
@@ -72,7 +74,7 @@ class ProjectController extends Controller
         $latestWikiPages = $project->wikiPages()->latest()->take(3)->get();
 
         return view('projects.show', compact(
-            'project', 'activeSprint', 'taskStats', 'recentTasks', 'latestReport', 'latestWikiPages'
+            'project', 'activeSprints', 'taskStats', 'recentTasks', 'latestReport', 'latestWikiPages'
         ));
     }
 
@@ -95,6 +97,14 @@ class ProjectController extends Controller
     public function destroy(Project $project)
     {
         $this->authorize('delete', $project);
+
+        // Cascade-delete children (soft-delete won't trigger FK cascades)
+        $project->tasks()->forceDelete();
+        $project->wikiPages()->forceDelete();
+        $project->progressReports()->forceDelete();
+        $project->sprints()->delete();
+        $project->members()->delete();
+
         $project->delete();
 
         return redirect()->route('projects.index')

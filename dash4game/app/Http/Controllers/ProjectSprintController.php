@@ -92,4 +92,18 @@ class ProjectSprintController extends Controller
         return redirect()->route('projects.sprints.index', $project)
             ->with('success', 'Raid deleted. Quests moved to backlog.');
     }
+
+    public function complete(Project $project, Sprint $sprint)
+    {
+        $this->authorize('update', $project);
+        abort_if($sprint->project_id != $project->id, 404);
+
+        if (!in_array($sprint->status, [SprintStatus::Planned, SprintStatus::Active])) {
+            return back()->with('error', 'Only planned or active raids can be completed.');
+        }
+
+        $sprint->update(['status' => SprintStatus::Completed]);
+
+        return back()->with('success', 'Raid completed! 🎉');
+    }
 }

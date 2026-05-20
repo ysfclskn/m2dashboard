@@ -26,9 +26,7 @@
                 </div>
 
                 <div>
-                    <x-input-label for="content" value="Content" />
-                    <textarea id="content" name="content" rows="16"
-                        class="w-full bg-gray-800 border border-gray-700 text-gray-100 rounded-lg px-3 py-2 text-sm font-mono focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none">{{ old('content', $wikiPage->content) }}</textarea>
+                    @include('wiki._editor', ['initialContent' => old('content', $wikiPage->content)])
                 </div>
 
                 <div class="flex items-center gap-3 pt-2">
@@ -37,5 +35,6 @@
                 </div>
             </form>
         </div>
+        @include('wiki._images')
     </div>
 </x-app-layout>

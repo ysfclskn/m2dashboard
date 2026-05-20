@@ -10,6 +10,7 @@ use App\Http\Requests\UpdateTaskRequest;
 use App\Http\Requests\UpdateTaskStatusRequest;
 use App\Models\Project;
 use App\Models\Task;
+use Illuminate\Http\Request;
 
 class ProjectTaskController extends Controller
 {
@@ -64,9 +65,10 @@ class ProjectTaskController extends Controller
         $this->authorize('view', $project);
         abort_if($task->project_id != $project->id, 404);
 
-        $task->load(['assignee', 'creator', 'sprint']);
+        $task->load(['assignee', 'creator', 'sprint', 'attachments', 'comments.user']);
+        $members = $project->members()->with('user')->get();
 
-        return view('tasks.show', compact('project', 'task'));
+        return view('tasks.show', compact('project', 'task', 'members'));
     }
 
     public function edit(Project $project, Task $task)
@@ -104,6 +106,39 @@ class ProjectTaskController extends Controller
         return back()->with('success', 'Quest status updated.');
     }
 
+    public function reorder(Request $request, Project $project)
+    {
+        $this->authorize('manageTasks', $project);
+
+        $allowed = array_column(TaskStatus::cases(), 'value');
+
+        $validated = $request->validate([
+            'tasks'              => ['required', 'array'],
+            'tasks.*.id'         => ['required', 'integer'],
+            'tasks.*.status'     => ['required', 'string', 'in:' . implode(',', $allowed)],
+            'tasks.*.order_index' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $projectTaskIds = $project->tasks()->pluck('id')->all();
+
+        foreach ($validated['tasks'] as $item) {
+            if (!in_array($item['id'], $projectTaskIds)) {
+                return response()->json(['message' => 'Task does not belong to this project.'], 403);
+            }
+        }
+
+        foreach ($validated['tasks'] as $item) {
+            Task::where('project_id', $project->id)
+                ->where('id', $item['id'])
+                ->update([
+                    'status'      => $item['status'],
+                    'order_index' => $item['order_index'],
+                ]);
+        }
+
+        return response()->json(['message' => 'Board updated.']);
+    }
+
     public function destroy(Project $project, Task $task)
     {
         $this->authorize('manageTasks', $project);
@@ -113,5 +148,23 @@ class ProjectTaskController extends Controller
 
         return redirect()->route('projects.quests.index', $project)
             ->with('success', 'Quest deleted.');
+    }
+
+    public function updateAssignee(Request $request, Project $project, Task $task)
+    {
+        $this->authorize('manageTasks', $project);
+        abort_if($task->project_id != $project->id, 404);
+
+        $request->validate([
+            'assignee_id' => ['nullable', 'exists:users,id'],
+        ]);
+
+        if ($request->assignee_id && !$project->members()->where('user_id', $request->assignee_id)->exists()) {
+            return back()->with('error', 'Selected user is not a project member.');
+        }
+
+        $task->update(['assignee_id' => $request->assignee_id]);
+
+        return back()->with('success', 'Assignee updated.');
     }
 }
