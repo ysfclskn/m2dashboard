@@ -18,17 +18,22 @@ class ProjectTaskController extends Controller
     {
         $this->authorize('view', $project);
 
-        $tasks = $project->tasks()
-            ->with(['assignee', 'sprint'])
-            ->orderBy('order_index')
-            ->get()
-            ->groupBy(fn ($t) => $t->status->value);
+        $activeSprint = $project->activeSprint();
+        $tasks        = collect();
+
+        if ($activeSprint) {
+            $tasks = $project->tasks()
+                ->where('sprint_id', $activeSprint->id)
+                ->with(['assignee', 'sprint'])
+                ->orderBy('order_index')
+                ->get()
+                ->groupBy(fn ($t) => $t->status->value);
+        }
 
         $statuses = TaskStatus::cases();
         $members  = $project->members()->with('user')->get();
-        $sprints  = $project->sprints()->whereIn('status', ['planned', 'active'])->get();
 
-        return view('tasks.index', compact('project', 'tasks', 'statuses', 'members', 'sprints'));
+        return view('tasks.index', compact('project', 'tasks', 'statuses', 'members', 'activeSprint'));
     }
 
     public function create(Project $project)

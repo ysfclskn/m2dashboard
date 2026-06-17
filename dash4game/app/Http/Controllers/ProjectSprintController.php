@@ -14,9 +14,16 @@ class ProjectSprintController extends Controller
     {
         $this->authorize('view', $project);
 
-        $sprints = $project->sprints()->withCount('tasks')->get();
+        $all = $project->sprints()
+            ->with(['tasks' => fn ($q) => $q->with('assignee')->orderBy('order_index')])
+            ->get();
 
-        return view('sprints.index', compact('project', 'sprints'));
+        $active    = $all->filter(fn ($s) => $s->status === SprintStatus::Active);
+        $planned   = $all->filter(fn ($s) => $s->status === SprintStatus::Planned)->sortBy('start_date');
+        $completed = $all->filter(fn ($s) => $s->status === SprintStatus::Completed)->sortByDesc('end_date');
+        $cancelled = $all->filter(fn ($s) => $s->status === SprintStatus::Cancelled)->sortByDesc('end_date');
+
+        return view('sprints.index', compact('project', 'active', 'planned', 'completed', 'cancelled'));
     }
 
     public function create(Project $project)

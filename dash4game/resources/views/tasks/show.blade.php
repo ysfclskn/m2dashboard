@@ -78,7 +78,7 @@
 
             @if ($task->description)
                 <div class="border-t border-gray-800 pt-4">
-                    <p class="text-sm text-gray-300 whitespace-pre-wrap">{{ $task->description }}</p>
+                    <x-linkified-text :text="$task->description" class="text-sm text-gray-300" />
                 </div>
             @endif
 
@@ -175,7 +175,7 @@
                         <span class="text-sm font-medium text-gray-200">{{ $comment->user->name }}</span>
                         <span class="text-xs text-gray-600">{{ $comment->created_at->diffForHumans() }}</span>
                     </div>
-                    <p class="text-sm text-gray-300 whitespace-pre-wrap break-words">{{ $comment->body }}</p>
+                    <x-linkified-text :text="$comment->body" class="text-sm text-gray-300" />
                 </div>
                 @if ($comment->user_id === auth()->id() || $isModeratorX)
                     <form method="POST" action="{{ route('projects.quests.comments.destroy', [$project, $task, $comment]) }}"

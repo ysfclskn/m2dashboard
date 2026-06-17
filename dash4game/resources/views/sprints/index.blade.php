@@ -12,10 +12,12 @@
     </x-slot>
 
     @php
-        $statusColors = ['planned'=>'text-gray-400 bg-gray-800','active'=>'text-green-400 bg-green-900/30','completed'=>'text-blue-400 bg-blue-900/30','cancelled'=>'text-red-400 bg-red-900/30'];
+        $hasAnySprint = $active->isNotEmpty() || $planned->isNotEmpty() || $completed->isNotEmpty() || $cancelled->isNotEmpty();
+        $sColors = ['backlog'=>'bg-gray-800 text-gray-400','todo'=>'bg-blue-900/40 text-blue-400','in_progress'=>'bg-amber-900/40 text-amber-400','review'=>'bg-purple-900/40 text-purple-400','done'=>'bg-green-900/40 text-green-400'];
+        $pColors = ['critical'=>'text-red-400','high'=>'text-orange-400','medium'=>'text-blue-400','low'=>'text-gray-500'];
     @endphp
 
-    @if ($sprints->isEmpty())
+    @if (!$hasAnySprint)
         <div class="bg-gray-900 border border-gray-800 rounded-xl p-12 text-center">
             <p class="text-4xl mb-4">⚡</p>
             <h2 class="text-lg font-semibold text-gray-100 mb-2">No raids yet</h2>
@@ -28,61 +30,55 @@
             @endcan
         </div>
     @else
-        <div class="space-y-4">
-            @foreach ($sprints->sortByDesc(fn($s) => $s->status->value === 'active' ? 1 : 0) as $sprint)
-                @php $badge = $statusColors[$sprint->status->value] ?? $statusColors['planned']; @endphp
-                <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-gray-700 transition-colors">
-                    <div class="flex items-start justify-between mb-3">
-                        <div>
-                            <div class="flex items-center gap-3">
-                                <a href="{{ route('projects.sprints.show', [$project, $sprint]) }}"
-                                   class="font-semibold text-gray-100 hover:text-amber-400 transition-colors">
-                                    {{ $sprint->name }}
-                                </a>
-                                <span class="text-xs px-2 py-0.5 rounded-full {{ $badge }}">{{ $sprint->status->label() }}</span>
-                            </div>
-                            @if ($sprint->goal)
-                                <p class="text-sm text-gray-400 mt-1">{{ $sprint->goal }}</p>
-                            @endif
-                        </div>
-                        @can('update', $project)
-                            <div class="flex items-center gap-2 ml-4">
-                                @if (in_array($sprint->status->value, ['planned', 'active']))
-                                    <form method="POST" action="{{ route('projects.sprints.complete', [$project, $sprint]) }}"
-                                          onsubmit="return confirm('Complete this raid?')">
-                                        @csrf @method('PATCH')
-                                        <button type="submit" class="text-xs px-2.5 py-1 bg-green-600 text-white rounded-lg hover:bg-green-500 transition-colors">✓ Complete</button>
-                                    </form>
-                                @endif
-                                <a href="{{ route('projects.sprints.edit', [$project, $sprint]) }}"
-                                   class="text-sm text-gray-500 hover:text-gray-300 transition-colors">Edit</a>
-                            </div>
-                        @endcan
-                    </div>
+        <div class="space-y-8">
 
-                    <div class="flex items-center gap-6 text-sm">
-                        <span class="text-gray-500">📜 {{ $sprint->tasks_count }} quests</span>
-                        @if ($sprint->start_date)
-                            <span class="text-gray-500">
-                                {{ $sprint->start_date->format('M j') }}
-                                @if ($sprint->end_date) — {{ $sprint->end_date->format('M j, Y') }} @endif
-                            </span>
-                        @endif
-                    </div>
-
-                    @if ($sprint->status->value === 'active')
-                        @php $pct = $sprint->completionPercentage(); @endphp
-                        <div class="mt-3">
-                            <div class="flex justify-between text-xs text-gray-500 mb-1">
-                                <span>Progress</span><span>{{ $pct }}%</span>
-                            </div>
-                            <div class="w-full bg-gray-800 rounded-full h-1.5">
-                                <div class="bg-green-500 h-1.5 rounded-full transition-all" style="width: {{ $pct }}%"></div>
-                            </div>
-                        </div>
-                    @endif
+            {{-- ── Active Raid Sprint ─────────────────────────────────────── --}}
+            @if ($active->isNotEmpty())
+                @foreach ($active as $sprint)
+                    @include('sprints._sprint-section', ['sprint' => $sprint, 'borderClass' => 'border-green-800', 'accentClass' => 'text-green-400'])
+                @endforeach
+            @else
+                <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 text-center">
+                    <p class="text-sm text-gray-500">No active raid. <a href="{{ route('projects.sprints.create', $project) }}" class="text-amber-400 hover:text-amber-300">Create or activate a sprint</a> to start the Quest Board.</p>
                 </div>
-            @endforeach
+            @endif
+
+            {{-- ── Planned Raids ──────────────────────────────────────────── --}}
+            @if ($planned->isNotEmpty())
+                <div>
+                    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">📅 Planned Raids</h2>
+                    <div class="space-y-4">
+                        @foreach ($planned as $sprint)
+                            @include('sprints._sprint-section', ['sprint' => $sprint, 'borderClass' => 'border-gray-800', 'accentClass' => 'text-gray-300'])
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- ── Completed Raids ────────────────────────────────────────── --}}
+            @if ($completed->isNotEmpty())
+                <div>
+                    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">✅ Completed Raids</h2>
+                    <div class="space-y-4">
+                        @foreach ($completed as $sprint)
+                            @include('sprints._sprint-section', ['sprint' => $sprint, 'borderClass' => 'border-gray-800', 'accentClass' => 'text-blue-400'])
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- ── Cancelled Raids ────────────────────────────────────────── --}}
+            @if ($cancelled->isNotEmpty())
+                <div>
+                    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">🚫 Cancelled Raids</h2>
+                    <div class="space-y-4">
+                        @foreach ($cancelled as $sprint)
+                            @include('sprints._sprint-section', ['sprint' => $sprint, 'borderClass' => 'border-gray-800', 'accentClass' => 'text-red-400'])
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
         </div>
     @endif
 </x-app-layout>
