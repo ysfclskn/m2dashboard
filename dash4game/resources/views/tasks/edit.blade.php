@@ -55,15 +55,35 @@
                     </div>
                 </div>
 
-                <div>
-                    <x-input-label for="due_date" value="Due Date" />
-                    <x-text-input id="due_date" name="due_date" type="date" :value="old('due_date', $task->due_date?->format('Y-m-d'))" />
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <x-input-label for="due_date" value="Due Date" />
+                        <x-text-input id="due_date" name="due_date" type="date" :value="old('due_date', $task->due_date?->format('Y-m-d'))" />
+                        <x-input-error :messages="$errors->get('due_date')" class="mt-1" />
+                    </div>
+                    <div>
+                        <x-input-label for="wiki_page_id" value="Linked Wiki Page" />
+                        <select id="wiki_page_id" name="wiki_page_id"
+                            class="w-full bg-gray-800 border border-gray-700 text-gray-100 rounded-lg px-3 py-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none">
+                            <option value="">None (no wiki page)</option>
+                            @foreach ($wikiPages as $wp)
+                                <option value="{{ $wp->id }}" {{ old('wiki_page_id', $task->wiki_page_id) == $wp->id ? 'selected' : '' }}>
+                                    {{ $wp->title }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <x-input-error :messages="$errors->get('wiki_page_id')" class="mt-1" />
+                    </div>
                 </div>
 
                 <div>
-                    <x-input-label for="description" value="Description" />
-                    <textarea id="description" name="description" rows="4"
-                        class="w-full bg-gray-800 border border-gray-700 text-gray-100 rounded-lg px-3 py-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none">{{ old('description', $task->description) }}</textarea>
+                    @include('wiki._editor', [
+                        'fieldName' => 'description',
+                        'fieldLabel' => 'Description',
+                        'initialContent' => old('description', $task->description ?? ''),
+                        'rows' => 10
+                    ])
+                    <x-input-error :messages="$errors->get('description')" class="mt-1" />
                 </div>
 
                 <div class="flex items-center gap-3 pt-2">

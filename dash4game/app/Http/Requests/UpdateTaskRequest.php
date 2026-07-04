@@ -15,14 +15,15 @@ class UpdateTaskRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title'       => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'type'        => ['required', new Enum(TaskType::class)],
-            'status'      => ['required', new Enum(TaskStatus::class)],
-            'priority'    => ['required', new Enum(TaskPriority::class)],
-            'sprint_id'   => ['nullable', 'exists:sprints,id'],
-            'assignee_id' => ['nullable', 'exists:users,id'],
-            'due_date'    => ['nullable', 'date'],
+            'title'        => ['required', 'string', 'max:255'],
+            'description'  => ['nullable', 'string'],
+            'type'         => ['required', new Enum(TaskType::class)],
+            'status'       => ['required', new Enum(TaskStatus::class)],
+            'priority'     => ['required', new Enum(TaskPriority::class)],
+            'sprint_id'    => ['nullable', 'exists:sprints,id'],
+            'assignee_id'  => ['nullable', 'exists:users,id'],
+            'wiki_page_id' => ['nullable', 'exists:wiki_pages,id'],
+            'due_date'     => ['nullable', 'date'],
         ];
     }
 }

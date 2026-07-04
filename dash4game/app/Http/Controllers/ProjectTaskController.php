@@ -45,8 +45,9 @@ class ProjectTaskController extends Controller
         $priorities = TaskPriority::cases();
         $members   = $project->members()->with('user')->get();
         $sprints   = $project->sprints()->whereIn('status', ['planned', 'active'])->get();
+        $wikiPages = $project->wikiPages;
 
-        return view('tasks.create', compact('project', 'types', 'statuses', 'priorities', 'members', 'sprints'));
+        return view('tasks.create', compact('project', 'types', 'statuses', 'priorities', 'members', 'sprints', 'wikiPages'));
     }
 
     public function store(StoreTaskRequest $request, Project $project)
@@ -70,7 +71,7 @@ class ProjectTaskController extends Controller
         $this->authorize('view', $project);
         abort_if($task->project_id != $project->id, 404);
 
-        $task->load(['assignee', 'creator', 'sprint', 'attachments', 'comments.user']);
+        $task->load(['assignee', 'creator', 'sprint', 'attachments', 'comments.user', 'wikiPage']);
         $members = $project->members()->with('user')->get();
 
         return view('tasks.show', compact('project', 'task', 'members'));
@@ -86,8 +87,9 @@ class ProjectTaskController extends Controller
         $priorities = TaskPriority::cases();
         $members    = $project->members()->with('user')->get();
         $sprints    = $project->sprints()->whereIn('status', ['planned', 'active'])->get();
+        $wikiPages  = $project->wikiPages;
 
-        return view('tasks.edit', compact('project', 'task', 'types', 'statuses', 'priorities', 'members', 'sprints'));
+        return view('tasks.edit', compact('project', 'task', 'types', 'statuses', 'priorities', 'members', 'sprints', 'wikiPages'));
     }
 
     public function update(UpdateTaskRequest $request, Project $project, Task $task)

@@ -1,15 +1,20 @@
+@php
+$fieldName = $fieldName ?? 'content';
+$fieldLabel = $fieldLabel ?? 'Content';
+$rows = $rows ?? 18;
+@endphp
 <div x-data="{ tab: 'write' }">
 
     {{-- Label + Tab toggle --}}
     <div class="flex items-center justify-between mb-1">
-        <label for="content" class="block text-sm font-medium text-gray-300">Content</label>
+        <label for="{{ $fieldName }}" class="block text-sm font-medium text-gray-300">{{ $fieldLabel }}</label>
         <div class="flex text-xs border border-gray-700 rounded overflow-hidden">
             <button type="button"
                     @click="tab='write'"
                     :class="tab==='write' ? 'bg-gray-700 text-gray-200' : 'text-gray-500 hover:text-gray-300'"
                     class="px-3 py-1 transition-colors">✏️ Edit</button>
             <button type="button"
-                    @click="tab='preview'; $nextTick(() => renderMdPreview())"
+                    @click="tab='preview'; $nextTick(() => renderMdPreview('{{ $fieldName }}', 'md-preview-{{ $fieldName }}'))"
                     :class="tab==='preview' ? 'bg-gray-700 text-gray-200' : 'text-gray-500 hover:text-gray-300'"
                     class="px-3 py-1 border-l border-gray-700 transition-colors">👁 Preview</button>
         </div>
@@ -18,34 +23,34 @@
     {{-- Toolbar --}}
     <div x-show="tab==='write'"
          class="flex flex-wrap gap-1 px-2 py-1.5 bg-gray-800 border border-gray-700 border-b-0 rounded-t-lg">
-        <button type="button" onclick="mdWrap('**','**')" title="Bold" class="md-btn font-bold">B</button>
-        <button type="button" onclick="mdWrap('*','*')" title="Italic" class="md-btn italic">I</button>
-        <button type="button" onclick="mdWrap('~~','~~')" title="Strikethrough" class="md-btn line-through">S</button>
+        <button type="button" onclick="mdWrap('**','**', '{{ $fieldName }}')" title="Bold" class="md-btn font-bold">B</button>
+        <button type="button" onclick="mdWrap('*','*', '{{ $fieldName }}')" title="Italic" class="md-btn italic">I</button>
+        <button type="button" onclick="mdWrap('~~','~~', '{{ $fieldName }}')" title="Strikethrough" class="md-btn line-through">S</button>
         <span class="self-center text-gray-700">|</span>
-        <button type="button" onclick="mdLine('# ')" title="Heading 1" class="md-btn">H1</button>
-        <button type="button" onclick="mdLine('## ')" title="Heading 2" class="md-btn">H2</button>
-        <button type="button" onclick="mdLine('### ')" title="Heading 3" class="md-btn">H3</button>
+        <button type="button" onclick="mdLine('# ', '{{ $fieldName }}')" title="Heading 1" class="md-btn">H1</button>
+        <button type="button" onclick="mdLine('## ', '{{ $fieldName }}')" title="Heading 2" class="md-btn">H2</button>
+        <button type="button" onclick="mdLine('### ', '{{ $fieldName }}')" title="Heading 3" class="md-btn">H3</button>
         <span class="self-center text-gray-700">|</span>
-        <button type="button" onclick="mdLine('- ')" title="Bullet list" class="md-btn">• List</button>
-        <button type="button" onclick="mdLine('1. ')" title="Numbered list" class="md-btn">1. List</button>
-        <button type="button" onclick="mdLine('> ')" title="Blockquote" class="md-btn">❝</button>
+        <button type="button" onclick="mdLine('- ', '{{ $fieldName }}')" title="Bullet list" class="md-btn">• List</button>
+        <button type="button" onclick="mdLine('1. ', '{{ $fieldName }}')" title="Numbered list" class="md-btn">1. List</button>
+        <button type="button" onclick="mdLine('> ', '{{ $fieldName }}')" title="Blockquote" class="md-btn">❝</button>
         <span class="self-center text-gray-700">|</span>
-        <button type="button" onclick="mdWrap('`','`')" title="Inline code" class="md-btn font-mono">code</button>
-        <button type="button" onclick="mdCodeBlock()" title="Code block" class="md-btn font-mono">```</button>
-        <button type="button" onclick="mdLine('---\n')" title="Horizontal rule" class="md-btn">—</button>
+        <button type="button" onclick="mdWrap('`','`', '{{ $fieldName }}')" title="Inline code" class="md-btn font-mono">code</button>
+        <button type="button" onclick="mdCodeBlock('{{ $fieldName }}')" title="Code block" class="md-btn font-mono">```</button>
+        <button type="button" onclick="mdLine('---\n', '{{ $fieldName }}')" title="Horizontal rule" class="md-btn">—</button>
         <span class="self-center text-gray-700">|</span>
-        <button type="button" onclick="mdInsertLink()" title="Insert link" class="md-btn">🔗 Link</button>
-        <button type="button" onclick="mdInsertImage()" title="Insert image markdown" class="md-btn">🖼 Image</button>
+        <button type="button" onclick="mdInsertLink('{{ $fieldName }}')" title="Insert link" class="md-btn">🔗 Link</button>
+        <button type="button" onclick="mdInsertImage('{{ $fieldName }}')" title="Insert image markdown" class="md-btn">🖼 Image</button>
     </div>
 
     {{-- Textarea --}}
     <textarea x-show="tab==='write'"
-              id="content" name="content" rows="18"
+              id="{{ $fieldName }}" name="{{ $fieldName }}" rows="{{ $rows }}"
               class="w-full bg-gray-800 border border-gray-700 rounded-b-lg text-gray-100 px-3 py-2 text-sm font-mono focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none">{{ $initialContent }}</textarea>
 
     {{-- Preview pane --}}
     <div x-show="tab==='preview'" x-cloak
-         id="md-preview"
+         id="md-preview-{{ $fieldName }}"
          class="wiki-prose min-h-72 bg-gray-800 border border-gray-700 rounded-lg px-5 py-4">
         <p class="text-gray-500 text-xs italic">Loading preview…</p>
     </div>
@@ -85,60 +90,60 @@
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 <script>
-const mdTA = () => document.getElementById('content');
+if (typeof mdWrap === 'undefined') {
+    function mdWrap(pre, post, id) {
+        const ta = document.getElementById(id); if (!ta) return;
+        const s = ta.selectionStart, e = ta.selectionEnd;
+        const sel = ta.value.substring(s, e) || 'text';
+        ta.setRangeText(pre + sel + post, s, e, 'select');
+        ta.focus();
+    }
 
-function mdWrap(pre, post) {
-    const ta = mdTA(); if (!ta) return;
-    const s = ta.selectionStart, e = ta.selectionEnd;
-    const sel = ta.value.substring(s, e) || 'text';
-    ta.setRangeText(pre + sel + post, s, e, 'select');
-    ta.focus();
-}
+    function mdLine(prefix, id) {
+        const ta = document.getElementById(id); if (!ta) return;
+        const s = ta.selectionStart;
+        const lineStart = ta.value.lastIndexOf('\n', s - 1) + 1;
+        ta.setRangeText(prefix, lineStart, lineStart, 'start');
+        ta.focus();
+    }
 
-function mdLine(prefix) {
-    const ta = mdTA(); if (!ta) return;
-    const s = ta.selectionStart;
-    const lineStart = ta.value.lastIndexOf('\n', s - 1) + 1;
-    ta.setRangeText(prefix, lineStart, lineStart, 'start');
-    ta.focus();
-}
+    function mdCodeBlock(id) {
+        const ta = document.getElementById(id); if (!ta) return;
+        const s = ta.selectionStart, e = ta.selectionEnd;
+        const sel = ta.value.substring(s, e) || 'code';
+        ta.setRangeText('```\n' + sel + '\n```', s, e, 'select');
+        ta.focus();
+    }
 
-function mdCodeBlock() {
-    const ta = mdTA(); if (!ta) return;
-    const s = ta.selectionStart, e = ta.selectionEnd;
-    const sel = ta.value.substring(s, e) || 'code';
-    ta.setRangeText('```\n' + sel + '\n```', s, e, 'select');
-    ta.focus();
-}
+    function mdInsertLink(id) {
+        const url = prompt('URL:', 'https://');
+        if (!url) return;
+        const ta = document.getElementById(id); if (!ta) return;
+        const s = ta.selectionStart, e = ta.selectionEnd;
+        const text = ta.value.substring(s, e) || 'link text';
+        ta.setRangeText('[' + text + '](' + url + ')', s, e, 'end');
+        ta.focus();
+    }
 
-function mdInsertLink() {
-    const url = prompt('URL:', 'https://');
-    if (!url) return;
-    const ta = mdTA();
-    const s = ta.selectionStart, e = ta.selectionEnd;
-    const text = ta.value.substring(s, e) || 'link text';
-    ta.setRangeText('[' + text + '](' + url + ')', s, e, 'end');
-    ta.focus();
-}
+    function mdInsertImage(id) {
+        const url = prompt('Image URL:', '/uploads/wiki-images/');
+        if (!url) return;
+        const ta = document.getElementById(id); if (!ta) return;
+        const alt = ta.value.substring(ta.selectionStart, ta.selectionEnd) || 'image';
+        const s = ta.selectionStart, e = ta.selectionEnd;
+        ta.setRangeText('![' + alt + '](' + url + ')', s, e, 'end');
+        ta.focus();
+    }
 
-function mdInsertImage() {
-    const url = prompt('Image URL:', '/uploads/wiki-images/');
-    if (!url) return;
-    const ta = mdTA();
-    const alt = ta.value.substring(ta.selectionStart, ta.selectionEnd) || 'image';
-    const s = ta.selectionStart, e = ta.selectionEnd;
-    ta.setRangeText('![' + alt + '](' + url + ')', s, e, 'end');
-    ta.focus();
-}
-
-function renderMdPreview() {
-    const ta = mdTA();
-    const preview = document.getElementById('md-preview');
-    if (!ta || !preview || typeof marked === 'undefined') return;
-    const html = typeof DOMPurify !== 'undefined'
-        ? DOMPurify.sanitize(marked.parse(ta.value || ''))
-        : marked.parse(ta.value || '');
-    preview.innerHTML = html || '<p style="color:#6b7280;font-style:italic;font-size:.875rem">Nothing to preview yet.</p>';
+    function renderMdPreview(id, previewId) {
+        const ta = document.getElementById(id);
+        const preview = document.getElementById(previewId);
+        if (!ta || !preview || typeof marked === 'undefined') return;
+        const html = typeof DOMPurify !== 'undefined'
+            ? DOMPurify.sanitize(marked.parse(ta.value || ''))
+            : marked.parse(ta.value || '');
+        preview.innerHTML = html || '<p style="color:#6b7280;font-style:italic;font-size:.875rem">Nothing to preview yet.</p>';
+    }
 }
 </script>
 @endpush
